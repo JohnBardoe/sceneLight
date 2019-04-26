@@ -33,7 +33,7 @@ if __name__ == '__main__':
     weightsfile = "model/yolov3.weights"
     num_classes = 80
     tracker = Sort()
-    colors = ((random.randrange(0, 255), random.randrange(0, 255), random.randrange(0, 255)),)*10
+    colors = [(random.randrange(0, 255), random.randrange(0, 255), random.randrange(0, 255)) for i in range(10)]
 
     confidence = float(0.5)
     nms_thresh = float(0.3)
@@ -100,9 +100,10 @@ if __name__ == '__main__':
         print("Ppl indexes: ", end="")
         for p in people:
             p = p.astype(np.int32)
-            cv2.rectangle(orig_im, (p[0], p[1]), (p[2], p[3]), colors[p[-1] % 10], 5)
+            cv2.rectangle(orig_im, (p[0], p[1]), (p[2], p[3]), colors[p[-1] % 10], 4)
             print(p[-1], end=" ")
         print("", end="|")
+
         cv2.imshow("frame", orig_im)
 
         if cv2.waitKey(1) & 0xFF == 27:

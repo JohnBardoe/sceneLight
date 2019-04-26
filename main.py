@@ -11,6 +11,10 @@ import pickle as pkl
 import os
 import random
 from utils.sort import *
+import sacn
+
+pan = [100, 100, 100, 100]
+tilt = [100, 100, 100, 100]
 
 def prep_image(img, inp_dim):
     orig_im = img
@@ -33,8 +37,13 @@ if __name__ == '__main__':
     weightsfile = "model/yolov3.weights"
     num_classes = 80
     tracker = Sort()
-    colors = ((random.randrange(0, 255), random.randrange(0, 255), random.randrange(0, 255)),)*10
+    colors = [(random.randrange(0, 255), random.randrange(0, 255), random.randrange(0, 255)) for i in range(10)]
 
+    sender = sacn.sACNsender()
+    sender.start()
+    sender.activate_output(1)
+    sender[1].multicast = False
+    sender[1].destination = "10.8.220.23"
     confidence = float(0.5)
     nms_thresh = float(0.3)
     start = 0
@@ -100,12 +109,24 @@ if __name__ == '__main__':
         print("Ppl indexes: ", end="")
         for p in people:
             p = p.astype(np.int32)
-            cv2.rectangle(orig_im, (p[0], p[1]), (p[2], p[3]), colors[p[-1] % 10], 5)
+            cv2.rectangle(orig_im, (p[0], p[1]), (p[2], p[3]), colors[p[-1] % 10], 4)
             print(p[-1], end=" ")
         print("", end="|")
+
         cv2.imshow("frame", orig_im)
 
         if cv2.waitKey(1) & 0xFF == 27:
             break
         frames += 1
         print("FPS: {:5.2f}".format(frames / (time.time() - start)))
+
+        sender[1].dmx_data = ((0,) * 12) + [(pan[i], tilt[i], 255, 0, 0, 0, 200) for i in range(4)]
+"""
+            pan[0],
+            tilt[0],
+            255, #r
+            0, #g
+            0, #b
+            0,
+            200 #dimmer
+"""
