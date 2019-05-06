@@ -3,4 +3,5 @@ __pycache__/
 v3/
 venv/
 model/
+darknet/
 utils/__pycache__/
