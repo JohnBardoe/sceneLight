@@ -4,4 +4,6 @@ v3/
 venv/
 model/
 utils/__pycache__/
+darknet/__pycache__
 *.so
+*.pyc

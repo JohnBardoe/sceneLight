@@ -26,7 +26,6 @@ from skimage import io
 from sklearn.utils.linear_assignment_ import linear_assignment
 import glob
 import time
-import argparse
 from filterpy.kalman import KalmanFilter
 
 
