@@ -10,7 +10,7 @@ import os
 import random
 import darknet.darknet as dn
 from utils.sort import *
-from lumos import DMXSource #needs tweaking
+import sacn
 import threading
 
 ##constants##############
@@ -32,13 +32,7 @@ tilt = [100, 100, 100, 100]
 dmx_data = list()
 lightSettings = list([255, 0, 0, 0, 200])
 #source = DMXSource(universe=1, bind_ip="10.8.220.23", bind_port=6553)
-source = DMXSource(universe=1, bind_ip="8.8.8.8", bind_port=6553)
-
-def sendData():
-    global source, dmx_data
-    if len(dmx_data) != 512:
-        dmx_data.append([0] * (512 - len(dmx_data)))
-    source.send_data(dmx_data)
+sender = sacn.sACNsender(bind_port=6553, bind_address="127.0.0.1")
 
 if __name__ == '__main__':
     tracker = Sort()
@@ -49,12 +43,13 @@ if __name__ == '__main__':
     net = dn.load_net("/home/bardoe/sources/sceneLight/model/yolov3.cfg".encode("utf-8"),
                       "/home/bardoe/sources/sceneLight/model/yolov3.weights".encode("utf-8"), 0)
     meta = dn.load_meta("/home/bardoe/sources/sceneLight/model/coco.data".encode("utf-8"))
-
     cap = cv2.VideoCapture(0)
 
     frames = 0
     start = time.time()
-    dmx_data = list([0] * 13)
+    sender.start()
+    sender.activate_output(1)
+    sender[1].multicast = True
 
     while cap.isOpened():
         if frames > 100000000:
@@ -62,6 +57,7 @@ if __name__ == '__main__':
             start = time.time()
         _, frame = cap.read()
 
+        dmx_data = list([0] * 13)
         r = dn.detect_np(net, meta, frame, confidence, confidence, nms_thresh)
         toSort = list()
 
@@ -78,12 +74,12 @@ if __name__ == '__main__':
         print("", end="|")
 
         cv2.imshow("frame", frame)
-        if cv2.waitKey(1) & 0xFF == 27:
-            break
-        frames += 1
         print("FPS: {:5.2f}".format(frames / (time.time() - start)))
         for i in range(4):
             dmx_data.extend(list([pan[i], tilt[i]]))
             dmx_data.extend(lightSettings)
-        sendThread = threading.Thread(target=sendData)
-        sendThread.start()
+        sender[1].dmx_data = dmx_data
+        if cv2.waitKey(1) & 0xFF == 27:
+            break
+            sender.stop()
+        frames += 1
