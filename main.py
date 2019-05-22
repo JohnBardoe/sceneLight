@@ -1,6 +1,7 @@
 # TODO: -deal with the pan
 #       -add logic for multiple people and false detections (hard af)
 #       -add trackbars for color change
+#       -study the SORT output because the rectangle is shit
 
 
 import time
@@ -29,10 +30,10 @@ nms_thresh = float(0.3)
 
 pan = [100, 100, 100, 100]
 tilt = [100, 100, 100, 100]
+indexes = [-1, -1, -1, -1]
 dmx_data = list()
 lightSettings = list([255, 0, 0, 0, 200])
-#source = DMXSource(universe=1, bind_ip="10.8.220.23", bind_port=6553)
-sender = sacn.sACNsender(bind_port=6553, bind_address="127.0.0.1")
+sender = sacn.sACNsender(bind_port=6553, bind_address="10.8.220.23")
 
 if __name__ == '__main__':
     tracker = Sort()
@@ -52,7 +53,7 @@ if __name__ == '__main__':
     sender[1].multicast = True
 
     while cap.isOpened():
-        if frames > 100000000:
+        if frames > 100:
             frames = 0
             start = time.time()
         _, frame = cap.read()
@@ -69,7 +70,8 @@ if __name__ == '__main__':
         print("Ppl indexes: ", end="")
         for p in people:
             p = p.astype(np.int32)
-            cv2.rectangle(frame, (p[0], p[1]), (p[2], p[3]), colors[p[-1] % 10], 4)
+            cv2.circle(frame, (int(p[0]), int(p[1])), 6, colors[p[-1] % 10], -1)
+            cv2.rectangle(frame, (int(p[0])//2, int(p[1])//2), (int(p[0] + p[2])//2, int(p[1] + p[3])//2), colors[p[-1] % 10], 4)
             print(p[-1], end=" ")
         print("", end="|")
 
