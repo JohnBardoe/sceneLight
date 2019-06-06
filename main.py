@@ -27,7 +27,7 @@ confidence = float(0.5)
 nms_thresh = float(0.3)
 #########################
 
-heads = list([head.Head] * 4)
+heads = [head.Head() for count in range(4)]
 dmx_data = list()
 lightSettingsOn = list([255, 0, 0, 0, 200])
 lightSettingsOff = list([255, 0, 0, 0, 0])
@@ -43,8 +43,11 @@ def findList(list, obj):
     return -1
 
 
-def updateIndex(index, x, y):
+def assignHd2Ps(index, x, y):
     global heads
+    if x > maxX or x < minX or y > minY or y > maxY:
+        return
+
     for i in range(len(heads)):
         if heads[i].index == index:
             heads[i].state = 1
@@ -73,8 +76,8 @@ def updateIndex(index, x, y):
 
 def setHead(index, x, y):
     global heads
-    heads[index].pan = minPan - (minPan - maxPan) * (x / (minX + maxX))
-    heads[index].tilt = maxTilt + (maxTilt - minTilt) * (y / (minY + maxY))
+    heads[index].pan = int(minPan - (minPan - maxPan) * (x / (minX + maxX)))
+    heads[index].tilt = int(maxTilt + (maxTilt - minTilt) * (y / (minY + maxY)))
 
 
 def updateHeads(indices):
@@ -128,7 +131,7 @@ if __name__ == '__main__':
             cv2.circle(frame, (int(p[0]), int(p[1])), 6, colors[p[-1] % 10], -1)
             cv2.rectangle(frame, (int(p[0]) // 2, int(p[1]) // 2), (int(p[0] + p[2]) // 2, int(p[1] + p[3]) // 2),
                           colors[p[-1] % 10], 4)
-            updateIndex(p[-1], int(p[0]), int(p[1]))
+            assignHd2Ps(p[-1], int(p[0]), int(p[1]))
             indices.append(p[-1])
         updateHeads(indices)
 
